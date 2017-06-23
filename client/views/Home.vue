@@ -20,6 +20,9 @@
           <p>No repos found. </p>
           <img src="../assets/dead.png"/>
         </div>
+        <transition name="fade">
+          <loading v-show="loading"></loading>
+        </transition>
       </section>
     </div>
   </div>
@@ -27,10 +30,12 @@
 
 <script>
   import Pagination from 'components/Pagination';
+  import Loading from 'components/Loading';
 
   export default {
   components: {
-    Pagination
+    Pagination,
+    Loading
   },
   data(){
       const CONSTANTS = {
@@ -45,6 +50,7 @@
         selectedRepoType:CONSTANTS.TEAM,
         total: 0,
         pageSize: 0,
+        loading:false
       }
   },
   methods:{
@@ -68,6 +74,7 @@
           this.changeDisplayRepos(page);
           return;
       }
+      this.loading = true;
       const identifier = this.selectedRepoType === this.CONSTANTS.TEAM ? 'Arrowstream' : localStorage.getItem('bitbucket_user_name');
       const access_token = localStorage.getItem('access_token');
       const url = `https://api.bitbucket.org/2.0/repositories/${identifier}?page=${page}`;
@@ -80,6 +87,7 @@
             this.personalRepos.values = this.personalRepos.values.concat(repos.body.values);
           }
           this.changeDisplayRepos(page);
+          this.loading = false;
       })
     },
     changeDisplayRepos(page){
@@ -92,6 +100,7 @@
   mounted(){
     const access_token = localStorage.getItem('access_token');
     const bitbucket_user_name = localStorage.getItem('bitbucket_user_name');
+    this.loading  = true;
     if(access_token && !bitbucket_user_name) {
       this.$http.get('https://api.bitbucket.org/2.0/user', {headers:{'Authorization': `Bearer ${access_token}`}}).then((userInfo)=>{
         this.$http.post('/updateUser',{bitbucket_id:userInfo.body.uuid}).then(()=>{});
@@ -104,6 +113,7 @@
       })
       this.$http.get('https://api.bitbucket.org/2.0/repositories/ArrowStream', {headers:{'Authorization': `Bearer ${access_token}`}}).then((repos)=>{
         this.teamRepos = repos.body;
+        this.loading = false;
       },()=>{})
     }
   },
@@ -112,29 +122,43 @@
 </script>
 @import '../../node_modules/bootstrap/dist/css/bootstrap.css';
 <style lang="scss" scoped>
-  .repo{
-    display: flex;
-    align-items:center;
-    .repo-avatar{
-      height: 40px;
-      width: 40px;
-      border-radius: 50%;
-      margin-right:1em;
+  .repositories {
+    position: relative;
+    .loading{
+      position: absolute;
+      top:50%;
+      left:50%;
     }
-    .repo-names{
-      .name{
-        margin:0;
+    .repo {
+      display: flex;
+      align-items: center;
+      .repo-avatar {
+        height: 40px;
+        width: 40px;
+        border-radius: 50%;
+        margin-right: 1em;
       }
-      .project-name{
-        margin:0;
+      .repo-names {
+        .name {
+          margin: 0;
+        }
+        .project-name {
+          margin: 0;
+        }
+      }
+    }
+    .no-data {
+      text-align: center;
+      img {
+        width: 200px;
+        height: 200px;
       }
     }
   }
-  .no-data{
-    text-align:center;
-    img{
-      width:200px;
-      height:200px;
-    }
+  .fade-enter-active, .fade-leave-active {
+    transition: opacity .5s
+  }
+  .fade-enter, .fade-leave-to /* .fade-leave-active in <2.1.8 */ {
+    opacity: 0
   }
 </style>
