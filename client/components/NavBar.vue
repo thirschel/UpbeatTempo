@@ -19,7 +19,6 @@
 </template>
 
 <script>
-  import { AUTH_CONFIG } from '../auth/auth0-variables'
   export default {
     name: 'nav-bar',
     props:['auth'],
@@ -33,7 +32,7 @@
     },
     methods: {
       login(){
-        window.location.href = `http://localhost:4000/bitbucket/authenticate`
+        window.location.href = `/bitbucket/authenticate`
       },
       logout(){
           this.auth.logout()

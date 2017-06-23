@@ -1,6 +1,5 @@
 'use strict'
 const fs = require('fs')
-var querystring = require('querystring')
 const path = require('path')
 const chalk = require('chalk')
 const express = require('express')
@@ -9,11 +8,18 @@ const webpackConfig = require('./webpack.dev')
 const config = require('./config')
 const LogPlugin = require('./log-plugin')
 const router = express.Router()
-var request = require('request')
-var jwt = require('jsonwebtoken');
+const request = require('request');
+const jwt = require('jsonwebtoken');
+const bodyParser = require('body-parser');
+const compression = require('compression');
 const app = express();
-var authConfig = require('../client/auth/auth0-variables');
-
+const authConfig = require('../client/auth/auth0-variables');
+const pool = require('./db');
+app.use(bodyParser.urlencoded({
+  extended: true,
+}));
+app.use(bodyParser.json());
+app.use(compression())
 
 router.get('/bitbucket/authenticate', function (req, res) {
   res.redirect(`https://bitbucket.org/site/oauth2/authorize?client_id=${authConfig.DEV_AUTH_CONFIG.clientId}&response_type=code&redirect_uri=${authConfig.DEV_AUTH_CONFIG.callbackUrl}`)
@@ -45,6 +51,20 @@ router.get('/bitbucket/callback', function (req, res) {
     })
   }
 )
+
+router.post('/updateUser', function(req,res){
+  let sql = `INSERT INTO users (bitbucket_id) 
+  SELECT($1::string)
+  WHERE NOT EXISTS ( SELECT bitbucket_id from users where bitbucket_id = $1::string);
+  `
+  pool.query(sql, [req.body.bitbucket_id], function(err, res) {
+    if(err) {
+      return console.error('error running query', err);
+    }
+
+    console.log('success');
+  });
+});
 
 router.get('/bitbucket/refresh', function (req, res) {
     var headers = {
