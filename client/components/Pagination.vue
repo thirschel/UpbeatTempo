@@ -80,8 +80,8 @@ export default {
         config() {
             return Object.assign({
                 offset: 2,
-                ariaNext: 'Próximo',
-                ariaPrevious: 'Anterior',
+                ariaNext: 'First',
+                ariaPrevious: 'Last',
                 previousText: '«',
                 nextText: '»',
                 alwaysShowPrevNext: true

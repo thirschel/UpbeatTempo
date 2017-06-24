@@ -41,16 +41,17 @@
   }
 </script>
 
-<style>
+<style lang="scss" scoped>
+  @import '../assets/variables.scss';
   .nav-bar-wrapper {
-    background-color: #f8f8f8;
-    border-color: #e7e7e7;
+    background-color: $brand-primary;
+    border-color: $brand-primary;
     padding:10px 0;
   }
 
   .nav-bar {
     display: flex;
-    color: #777;
+    color: #FFF;
   }
   .nav-left, .nav-right{
     width:50%;

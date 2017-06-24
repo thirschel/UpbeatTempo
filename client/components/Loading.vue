@@ -51,7 +51,7 @@
   #bitbucket_loader {
     display: block;
     height: 10rem;
-    animation: spin-wobble 4s ease infinite;
+    animation: spin-wobble 3s ease infinite;
   }
 
   @keyframes spin-wobble {
@@ -101,7 +101,7 @@
   }
 
   .eye-translate g {
-    animation: eye-rotate 4s ease infinite;
+    animation: eye-rotate 3s ease infinite;
     transform-origin: center;
     transform: rotateY(70deg) translateZ(40px) translateX(80px) translateY(-8px) rotateX(-9.5deg);
   }
