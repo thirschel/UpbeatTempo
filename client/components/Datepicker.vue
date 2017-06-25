@@ -52,17 +52,18 @@
     },
     data() {
       return {
-        date: '',
+        startDate: '',
+        endDate: '',
         isVisible: false
       };
     },
     computed: {
       date_formatted() {
-        if (this.date) return this.date.format(this.format);
+        if (this.startDate && this.endDate) return `${this.startDate.format(this.format)} - ${this.endDate.format(this.format)}`;
         return '';
       },
       date_raw() {
-        if (this.date) return this.date.format('YYYY-MM-DD');
+        if (this.startDate && this.endDate) return `${this.startDate.format('YYYY-MM-DD')} - ${this.endDate.format('YYYY-MM-DD')}`;
         return '';
       }
     },
@@ -70,8 +71,9 @@
       moment.locale(this.lang);
     },
     methods: {
-      selectDate(newDate) {
-        this.date = newDate;
+      selectDate(newDates) {
+        this.startDate = newDates.start;
+        this.endDate = newDates.end;
       },
       showDatepicker() {
         this.isVisible = true;
