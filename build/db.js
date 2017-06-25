@@ -1,6 +1,6 @@
 const pg = require('pg');
 
-var config = {
+const config = {
   user: 'thirschel',
   database: 'postgres',
   password: 'Pkd2waxw',

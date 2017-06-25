@@ -1,5 +1,5 @@
 <template>
-  <div class="checkbox" :class="{checked: internal_checked}" @click="checkboxClick()">
+  <div class="checkbox" :class="{checked: internalChecked}" @click="checkboxClick()">
     <div class="checkbox-inner fa fa-check"></div>
   </div>
 </template>
@@ -23,6 +23,11 @@
         this.internal_checked = !this.internal_checked;
         this.$emit('checkedChange', this.internal_checked);
       }
+    },
+    computed:{
+        internalChecked(){
+            return this.checked;
+        }
     },
     mounted(){
       this.internal_checked = this.checked;

@@ -1,15 +1,6 @@
 <template>
   <div class="page container">
     <div v-if='authenticated'>
-      <div class="team-prompt">
-        <h2>Do you have a team name?</h2>
-        <custom-input :value="teamName" :label="CONSTANTS.TEAM_PROMPT_LABEL"
-                      @valueChanged="teamNameChanged"></custom-input>
-        <div class="buttons">
-          <button class="ub-btn">No</button>
-          <button class="ub-btn ub-btn-primary" :disabled="!teamName.length">Confirm</button>
-        </div>
-      </div>
 
       <section class="repo-selection">
         <div class="selection ub-btn" :class="{'ub-btn-primary':CONSTANTS.PERSONAL === selectedRepoType}"
@@ -26,7 +17,7 @@
                         @valueChanged="searchTextChanged"></custom-input>
         </div>
         <div class="confirm-repos-wrapper">
-          <button class="ub-btn ub-btn-primary" :disabled="!checkedRepos.length">Confirm Repositories</button>
+          <button class="ub-btn ub-btn-primary" :disabled="!checkedRepos.length" @click="confirmRepositories">Confirm Repositories</button>
         </div>
       </div>
 
@@ -63,7 +54,8 @@
   import Pagination from 'components/Pagination';
   import Loading from 'components/Loading';
   import Checkbox from 'components/Checkbox';
-  import CustomInput from "../components/Input";
+  import CustomInput from "components/Input";
+  import router from './../router';
 
   export default {
     components: {
@@ -76,7 +68,6 @@
       const CONSTANTS = {
         PERSONAL: 'PERSONAL_REPOS',
         TEAM: 'TEAM_REPOS',
-        TEAM_PROMPT_LABEL: 'Team Name',
         SEARCH_REPO_LABEL: 'Search Repository Name...'
       }
       return {
@@ -91,7 +82,6 @@
         pageSize: 10,
         loading: false,
         searchRepoName: '',
-        teamName: '',
       }
     },
     computed: {
@@ -166,22 +156,16 @@
       searchTextChanged(value){
         this.searchRepoName = value;
       },
-      teamNameChanged(value){
-        this.teamName = value;
+      confirmRepositories(){
+          localStorage.setItem('repositories',JSON.stringify(this.checkedRepos));
+          router.replace('/ConfirmRepositories')
       }
     },
     mounted(){
       const access_token = localStorage.getItem('access_token');
       const bitbucket_user_name = localStorage.getItem('bitbucket_user_name');
       this.loading = true;
-      if (access_token && !bitbucket_user_name) {
-        this.$http.get('https://api.bitbucket.org/2.0/user', {headers: {'Authorization': `Bearer ${access_token}`}}).then((userInfo) => {
-          this.$http.post('/updateUser', {bitbucket_id: userInfo.body.uuid}).then(() => {
-          });
-          localStorage.setItem('bitbucket_user_name', userInfo.body.username)
-        })
-      }
-      else if (access_token && bitbucket_user_name) {
+      if (access_token && bitbucket_user_name) {
         this.$http.get(`https://api.bitbucket.org/2.0/repositories/${bitbucket_user_name}?pagelen=100`, {headers: {'Authorization': `Bearer ${access_token}`}}).then((repos) => {
           this.personalRepos = repos.body;
         })

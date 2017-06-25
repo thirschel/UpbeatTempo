@@ -1,4 +1,4 @@
-import auth0 from 'auth0-js'
+import Rx from 'rxjs/Rx';
 import EventEmitter from 'EventEmitter'
 import router from './../router'
 
@@ -8,32 +8,39 @@ export default class AuthService {
   authNotifier = new EventEmitter();
 
   constructor () {
-    this.login = this.login.bind(this);
     this.setSession = this.setSession.bind(this);
     this.logout = this.logout.bind(this);
     this.isAuthenticated = this.isAuthenticated.bind(this);
   }
 
-  login () {
-    this.auth0.authorize()
-  }
-
   handleAuthentication () {
     var params = this.getParams(window.location.search);
       if (params['access_token']) {
-        this.setSession(params);
-        router.replace('home')
+        var token = this.parseJwt(params.access_token);
+        this.getAuthorizedJSON('https://api.bitbucket.org/2.0/user' , token.access_token).subscribe(userInfo=>{
+          this.postJSON('/updateUser', {bitbucket_id: userInfo.uuid}).subscribe(user=>{
+            this.setSession(token, userInfo, user);
+            if(user.has_confirmed_team_name){
+              router.replace('/')
+            }
+            else{
+              router.replace('/setTeamName')
+            }
+          })
+        });
       } else {
-        router.replace('home');
+        router.replace('/');
         alert(`Error: Did not receive access token.`)
       }
   }
 
-  setSession (params) {
-    var token = this.parseJwt(params.access_token);
+  setSession (token, userInfo, user) {
     let expiresAt = JSON.stringify(
       token.expires_in * 1000 + new Date().getTime()
     )
+    localStorage.setItem('bitbucket_id', userInfo.uuid);
+    localStorage.setItem('team_name', user.team_name);
+    localStorage.setItem('bitbucket_user_name', userInfo.username);
     localStorage.setItem('access_token', token.access_token);
     localStorage.setItem('refresh_token', token.refresh_token);
     localStorage.setItem('expires_at', expiresAt);
@@ -53,8 +60,6 @@ export default class AuthService {
   }
 
   isAuthenticated () {
-    // Check whether the current time is past the
-    // access token's expiry time
     let expiresAt = JSON.parse(localStorage.getItem('expires_at'));
     return new Date().getTime() < expiresAt
   }
@@ -78,4 +83,44 @@ export default class AuthService {
         return params;
       }, { });
   };
+
+  postJSON(url, data) {
+    return Rx.Observable.create(observer => {
+      let canceled = false;
+      if (!canceled) {
+        $.ajax({
+          type: 'POST',
+          url,
+          data,
+          success: (res => {
+            observer.next(res);
+            observer.complete();
+          }),
+          error: (err => observer.error(err)),
+        });
+      }
+      return () => canceled = true;
+    });
+  }
+
+  getAuthorizedJSON(url, accessToken) {
+    return Rx.Observable.create(observer => {
+      let canceled = false;
+      if (!canceled) {
+        $.ajax({
+          type: 'GET',
+          beforeSend: function(request) {
+            request.setRequestHeader("Authorization", `Bearer ${accessToken}`);
+          },
+          url,
+          success: (res => {
+            observer.next(res);
+            observer.complete();
+          }),
+          error: (err => observer.error(err)),
+        });
+      }
+      return () => canceled = true;
+    });
+  }
 }

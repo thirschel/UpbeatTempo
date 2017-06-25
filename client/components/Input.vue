@@ -1,7 +1,7 @@
 <template>
 				<span class="input input--madoka">
-					<input class="input__field input__field--madoka" type="text" id="input-31" v-model="internalValue" :class="{filled:internalValue && internalValue.length}"/>
-					<label class="input__label input__label--madoka" for="input-31">
+					<input class="input__field input__field--madoka" id="t" type="text" v-model="internalValue" :class="{filled:internalValue && internalValue.length}" :placeholder="placeholder"/>
+					<label class="input__label input__label--madoka" for="t">
 						<svg class="graphic graphic--madoka" width="100%" height="100%" viewBox="0 0 404 77" preserveAspectRatio="none">
 							<path d="m0,0l404,0l0,77l-404,0l0,-77z"/>
 						</svg>
@@ -19,6 +19,10 @@
         required: false
       },
       label: {
+          type:String,
+          required:false
+      },
+      placeholder:{
           type:String,
           required:false
       }
