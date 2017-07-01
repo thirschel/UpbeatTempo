@@ -10,13 +10,14 @@ const bodyParser = require('body-parser');
 const compression = require('compression');
 const app = express();
 const api = require('./api');
-
+const OAuth = require('oauth').OAuth;
 app.use(bodyParser.urlencoded({
   extended: true
 }));
 app.use(bodyParser.json());
 app.use(compression());
 app.use('/', api.router);
+
 
 const port = config.port;
 webpackConfig.entry.client = [

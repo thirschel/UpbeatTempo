@@ -1,22 +1,27 @@
 <template>
-				<span class="input input--madoka">
-					<input class="input__field input__field--madoka" id="t" type="text" v-model="internalValue" :class="{filled:internalValue && internalValue.length}" :placeholder="placeholder"/>
-					<label class="input__label input__label--madoka" for="t">
-						<svg class="graphic graphic--madoka" width="100%" height="100%" viewBox="0 0 404 77" preserveAspectRatio="none">
-							<path d="m0,0l404,0l0,77l-404,0l0,-77z"/>
-						</svg>
-						<span class="input__label-content input__label-content--madoka">{{label}}</span>
+				<span class="input">
+					<input v-if="type === 'text'" class="input-field" :id="id" type="text" v-model="internalValue" :class="{filled:internalValue && internalValue.length}" :placeholder="placeholder"/>
+					<input v-if="type === 'password'" class="input-field" :id="id" type="password" v-model="internalValue" :class="{filled:internalValue && internalValue.length}" :placeholder="placeholder"/>
+					<label class="input-label" :for="id">
+						<span class="input-label-content">{{label}}</span>
 					</label>
+          <div class="bar"></div>
 				</span>
 </template>
 
 <script>
+  import { guid } from '../assets/utilities';
   export default {
     name: 'custom-input',
     props: {
       value: {
         type: String,
         required: false
+      },
+      type: {
+          type:String,
+          default:'text',
+          required:false
       },
       label: {
           type:String,
@@ -29,7 +34,8 @@
     },
     data(){
       return{
-          internalValue:''
+          internalValue:'',
+          id:guid()
       }
     },
     mounted(){
@@ -55,97 +61,94 @@
     vertical-align: top;
   }
 
-  .input__field {
+  .input-field {
     position: relative;
     display: block;
-    float: right;
-    padding: 0.8em;
-    width: 60%;
+    padding: 0.8em 0.8em 0.8em .4em;
     border: none;
     border-radius: 0;
-    background: #f0f0f0;
-    color: #aaa;
     font-weight: bold;
     -webkit-appearance: none;
+    width: 100%;
+    background: transparent;
+    color: #666;
     &:focus, &.filled {
       outline: none;
     }
+    &:focus{
+      ~ .bar{
+        &::before{
+          width:50%;
+          left:0;
+        }
+        &::after{
+          width:50%;
+        }
+      }
+    }
   }
 
-  .input__label {
-    display: inline-block;
-    float: right;
+  .input-label {
+    position: absolute;
+    top:0;
+    left:0;
     padding: 0 1em;
-    width: 40%;
-    color: #70C1B3;
     font-weight: bold;
     font-size: 16px;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     user-select: none;
-  }
-
-  .input__label-content {
-    position: relative;
-    display: block;
-    padding: 0.6em 0;
-    width: 100%;
-  }
-
-  .graphic {
-    position: absolute;
-    top: 0;
-    left: 0;
-    fill: none;
-  }
-
-  .input__field--madoka {
-    width: 100%;
-    background: transparent;
-    color: #70C1B3;
-  }
-
-  .input__label--madoka {
-    position: absolute;
     width: 100%;
     height: 100%;
     color: #70C1B3;
     text-align: left;
     cursor: text;
   }
+  .bar{
+    height:1px;
+    width:100%;
+    border-bottom:1px solid #CCC;
+    position: relative;
+    &::before{
+      content: '';
+      height:3px;
+      width:0;
+      left:50%;
+      position: absolute;
+      background: #70C1B3;
+      transition:.25s ease-in-out;
+    }
+    &::after{
+      content: '';
+      height: 3px;
+      width: 0;
+      background: #70C1B3;
+      position: absolute;
+      left: 50%;
+      transition:.25s ease-in-out;
+    }
+  }
 
-  .input__label-content--madoka {
+  .input-label-content {
     transform-origin: 0% 50%;
-    transition: 0.3s ease-in-out;
+    transition: 0.25s cubic-bezier(0.68, -0.55, 0.257, 1.55);
+    position: relative;
+    display: block;
+    padding: 0.6em 0;
+    width: 100%;
   }
 
-  .graphic--madoka {
-    transform: scale3d(1, -1, 1);
-    transition: stroke-dashoffset 0.3s;
-    pointer-events: none;
-    stroke: #70C1B3;
-    stroke-width: 4px;
-    stroke-dasharray: 962;
-    stroke-dashoffset: 558;
-  }
-
-  .input__field--madoka:focus + .input__label--madoka,
-  .filled + .input__label--madoka,
-  .input--filled .input__label--madok{
+  .input-field:focus + .input-label,
+  .filled + .input-label,
+  .input--filled .input-label{
     cursor: default;
     pointer-events: none;
   }
 
-  .input__field--madoka:focus + .input__label--madoka .graphic--madoka,
-  .filled + .input__label--madoka .graphic--madoka,
-  .input--filled .graphic--madoka {
-    stroke-dashoffset: 0;
-  }
-
-  .input__field--madoka:focus + .input__label--madoka .input__label-content--madoka,
-  .filled + .input__label--madoka .input__label-content--madoka,
-  .input--filled .input__label-content--madoka {
-    transform: translate3d(-1em, -2.5em, 0);
+  .input-field:focus + .input-label .input-label-content,
+  .filled + .input-label .input-label-content,
+  .input--filled .input-label-content {
+    transform: translate3d(-1em, -1.5em, 0);
     font-size:12px;
   }
 </style>

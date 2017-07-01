@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 import Home from '../views/Home'
+import Login from '../views/Login'
 import Callback from 'components/Callback'
 import SetTeamName from 'views/SetTeamName'
 import ConfirmRepositories from 'views/ConfirmRepositories'
@@ -12,6 +13,11 @@ export default new Router({
   routes: [
     {
       path: '/',
+      component: Login
+    },
+    {
+      path: '/home',
+      name: 'home',
       component: Home
     },
     {

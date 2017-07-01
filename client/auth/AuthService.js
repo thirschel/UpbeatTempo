@@ -21,7 +21,7 @@ export default class AuthService {
           this.postJSON('/updateUser', {bitbucket_id: userInfo.uuid}).subscribe(user=>{
             this.setSession(token, userInfo, user);
             if(user.has_confirmed_team_name){
-              router.replace('/')
+              router.replace('/home')
             }
             else{
               router.replace('/setTeamName')

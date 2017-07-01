@@ -181,15 +181,8 @@
   }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
   @import '../assets/variables.scss';
-
-  .team-prompt {
-    text-align: center;
-    h2 {
-      color: $brand-accent;
-    }
-  }
 
   .repo-selection {
     display: flex;

@@ -33,6 +33,7 @@
 @import '../assets/variables.scss';
   body{
     font-family: 'Arimo', sans-serif;
+    background: #f5f6f7;
     .ub-btn{
       font-size: 20px;
       border-radius: 4px;

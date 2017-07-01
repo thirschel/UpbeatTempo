@@ -74,6 +74,7 @@
       selectDate(newDates) {
         this.startDate = newDates.start;
         this.endDate = newDates.end;
+        this.$emit('dateChanged',newDates);
       },
       showDatepicker() {
         this.isVisible = true;

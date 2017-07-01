@@ -4,6 +4,7 @@
     "import/no-unresolved": 0,
     "import/no-unassigned-import": 0,
     "no-extra-semi": 0,
-    "semi": 0
+    "semi": 0,
+    "brace-style":0
   }
 }
