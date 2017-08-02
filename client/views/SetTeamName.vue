@@ -33,7 +33,7 @@
         <div class="explanation" :class="{'show':showExplanation}">
           Jira's API is tied to their tenant/subdomain based instances. Jira has support for OAuth 1.0 however, it requires the admin the instance to create an Application Link
         with a private key and share the private key to the consumer application. However, the API can also be accessed using Basic Auth in which credentials are sent encoded over TLS with request.
-        If you choose to store your credentials on UpbeatTempo, a base64 encoded string of the username and password is salted and hashed using 1000 rounds. Otherwise you may choose to enter your credentials everytime and they are never stored.
+        If you choose to store your credentials on UpbeatTempo, a base64 encoded string of the username and password is encrypted using AES encryption. Otherwise you may choose to enter your credentials everytime and they are never stored.
         The sourcecode is openly available to look at on github
         </div>
       </div>
@@ -114,8 +114,18 @@
       const bitbucket_user_name = localStorage.getItem('bitbucket_id');
       this.loading = true;
       if (bitbucket_user_name) {
-        this.$http.get(`/settings?bitbucketId=${bitbucket_user_name.replace(/{|}/g,'')}`,).then((settings) => {
-          console.log(settings.body)
+        this.$http.get(`/settings?bitbucketId=${bitbucket_user_name.replace(/{|}/g,'')}`,).then((res) => {
+          var settings = res.body;
+          if(settings){
+              var jiraAuth;
+              if(settings.JiraAuth){
+                jiraAuth = atob(settings.JiraAuth);
+              }
+              this.teamName = settings.BitbucketTeamName;
+              this.instanceName = settings.JiraInstanceName;
+              this.userName = jiraAuth.split(':')[0];
+              this.password = jiraAuth.split(':')[1];
+          }
         })
       }
     }

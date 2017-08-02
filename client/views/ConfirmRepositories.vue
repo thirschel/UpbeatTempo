@@ -17,6 +17,16 @@
       </div>
     </transition>
 
+    <div class='ticket' v-for="commit in commits">
+      <div class="ticket-header">
+        <p>{{commit.ticket}}</p>
+        <p>{{commit.dateString}}</p>
+      </div>
+      <div class="body">
+
+      </div>
+    </div>
+
   </section>
 </template>
 
@@ -43,7 +53,8 @@
         startDate:'',
         endDate:'',
         loading:false,
-        tickets:new Set(),
+        tickets:new Map(),
+        commits:[],
       }
     },
     methods:{
@@ -57,7 +68,6 @@
       },
       filterCommits(){
         this.loading = true;
-        const tickets = new Set();
         const access_token = localStorage.getItem('access_token');
         const bitbucket_id = localStorage.getItem('bitbucket_id');
         const repos = JSON.parse(localStorage.getItem('repositories'));
@@ -65,20 +75,29 @@
         const getCommits = (repo, url)=>{
           this.$http.get(`${url}&pagelen=100`, {headers: {'Authorization': `Bearer ${access_token}`}}).then((commits) => {
             repoCommits[repo.name] = repoCommits[repo.name].concat(commits.body.values);
-            if(!moment(commits.body.values[commits.body.values.length - 1].date).isBefore(this.endDate, 'day') && commits.body.next){
+            if(!moment(commits.body.values[commits.body.values.length - 1].date).isBefore(this.startDate, 'day') && commits.body.next){
               getCommits(repo,commits.body.next);
             }
             else{
-              for(var i=0;i<repoCommits[repo.name].length;i++){
+              repoCommits[repo.name].forEach((commit)=>{
                 if(moment(commit.date).isAfter(this.startDate, 'day') &&
                   moment(commit.date).isBefore(this.endDate, 'day') &&
                   commit.author.user.uuid === bitbucket_id){
                     var match = commit.message.match(this.regex);
                     if(commit.message.match(this.regex)){
-                      this.tickets.add(match[0]);
+                      commit.ticket = match[0];
+                      commit.dateString = moment(commit.date).format('YYYY-MM-DD');
+                      if(this.tickets.has(match[0])){
+                          var value = this.tickets.get(match[0]);
+                          this.tickets.set(value.concat([commit]));
+                      }
+                      else{
+                          this.tickets.set(match[0],[commit]);
+                      }
+                      this.commits.push(commit);
                     }
                 }
-              }
+              })
             }
           })
         }
@@ -95,5 +114,16 @@
 </script>
 
 <style lang="scss" scoped>
-
+  .ticket{
+    background: #FFF;
+    margin: 1em 0;
+    padding: 32px 32px 16px;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+    .ticket-header {
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid #CCC;
+      padding-bottom: 1em;
+    }
+  }
 </style>

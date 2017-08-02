@@ -34,9 +34,15 @@
     },
     data(){
       return{
-          internalValue:'',
+          internalValue:this.value,
           id:guid()
       }
+    },
+    computed:{
+        test(){
+            console.log(this.value)
+          return this.value;
+        }
     },
     mounted(){
         this.internalValue = this.value;
@@ -44,6 +50,9 @@
     watch:{
       internalValue:function(){
           this.$emit('valueChanged', this.internalValue);
+      },
+      value:function(){
+        this.internalValue = this.value;
       }
     }
   }

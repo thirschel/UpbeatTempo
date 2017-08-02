@@ -4,6 +4,12 @@ const request = require('request');
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const router = express.Router();
+const fb = require('firebase');
+const crypto = require('crypto-js');
+const firebase = fb.initializeApp(authConfig.DEV_AUTH_CONFIG.firebaseAuth);
+firebase.auth().signInWithEmailAndPassword(authConfig.DEV_AUTH_CONFIG.firebaseAuth.email, authConfig.DEV_AUTH_CONFIG.firebaseAuth.password).catch(function (error) {
+  console.log(error);
+})
 
 router.get('/bitbucket/authenticate', function (req, res) {
   res.redirect(`https://bitbucket.org/site/oauth2/authorize?client_id=${authConfig.DEV_AUTH_CONFIG.clientId}&response_type=code&redirect_uri=${authConfig.DEV_AUTH_CONFIG.callbackUrl}`)
@@ -61,34 +67,29 @@ router.get('/bitbucket/refresh', function (req, res) {
 });
 
 router.post('/updateUser', function (req, res) {
-  const insertUserSql = `INSERT INTO users (BitbucketID) 
-  SELECT($1::varchar)
-  WHERE NOT EXISTS ( SELECT BitbucketID from users where BitbucketID = $1::varchar);
-  `;
-  const getUserSql = `SELECT * FROM users WHERE BitbucketID = $1::varchar;`;
-  pool.query(insertUserSql, [req.body.bitbucket_id], function (err) {
-    if (err) {
-      return console.error('error running query', err)
+  var bitbucketId = `bitbucket${req.body.bitbucket_id}`;
+  var userData = { BitbucketId: req.body.bitbucket_id };
+  firebase.database().ref('users/' + bitbucketId).transaction((currentData) => {
+    if (currentData === null) {
+      return userData;
     }
-    pool.query(getUserSql, [req.body.bitbucket_id], function (err, resp) {
-      if (err) {
-        return console.error('error running query', err)
-      }
-      res.json(resp.rows[0])
-    })
-  })
+  }, (error, committed) => {
+  });
+  firebase.database().ref('/users/' + bitbucketId).once('value').then(function (snapshot) {
+    res.json(snapshot.val());
+  });
 });
 
 router.get('/settings', function (req, res) {
-  const getUserSql = `SELECT * FROM users WHERE BitbucketID = $1::varchar;`;
-  pool.query(getUserSql, [`{${req.query['bitbucketId']}}`], function (err, resp) {
-    if (err) {
-      return console.error('error running query', err)
+  var bitbucketId = `bitbucket{${req.query['bitbucketId']}}`;
+  firebase.database().ref('/users/' + bitbucketId).once('value').then(function (snapshot) {
+    var user = snapshot.val();
+    if (user.JiraAuth) {
+      var bytes = crypto.AES.decrypt(user.JiraAuth, authConfig.DEV_AUTH_CONFIG.encryptionKey);
+      user.JiraAuth = bytes.toString(crypto.enc.Utf8);
     }
-    else {
-      res.json(resp.rows[0]);
-    }
-  })
+    res.json(user);
+  });
 });
 
 router.post('/updateSettings', function (req, res) {
@@ -106,6 +107,18 @@ router.post('/updateSettings', function (req, res) {
 
     request(options, function (error, response, body) {
       if (!error && response.statusCode === 200) {
+        var hash = crypto.AES.encrypt(req.body.jiraAuth, authConfig.DEV_AUTH_CONFIG.encryptionKey);
+        var bitbucketId = `bitbucket${req.body.bitbucketId}`;
+        var updatedUserData = {
+          BitbucketTeamName: req.body.teamName,
+          JiraAuth: hash.toString(),
+          JiraInstanceName: req.body.jiraInstanceName,
+          LastUpdated: new Date()
+        };
+        firebase.database().ref('users/' + bitbucketId).transaction((currentData) => {
+          return Object.assign({}, currentData, updatedUserData);
+        }, (error, committed) => {
+        });
         res.status(200);
         res.send('Succesfully updated your settings.');
       }
@@ -123,15 +136,19 @@ router.post('/updateSettings', function (req, res) {
       }
     })
   }
-  const sql = `
-  UPDATE users SET TeamName = $2::varchar, JiraAuth = $3::varchar, JiraInstanceName = $4::varchar, LastUpdated = $5::timestamp
-  WHERE  BitbucketID = $1::varchar;
-  `;
-  pool.query(sql, [req.body.bitbucketId, req.body.teamName, req.body.jiraAuth, req.body.jiraInstanceName, new Date()], function (err) {
-    if (err) {
-      return console.error('error running query', err)
-    }
-  })
+  var bitbucketId = `bitbucket${req.body.bitbucketId}`;
+  var updatedUserData = {
+    BitbucketTeamName: req.body.teamName,
+    JiraAuth: '',
+    JiraInstanceName: req.body.jiraInstanceName,
+    LastUpdated: new Date()
+  };
+  firebase.database().ref('users/' + bitbucketId).transaction((currentData) => {
+    return Object.assign({}, currentData, updatedUserData);
+  }, (error, committed) => {
+  });
+  res.status(200);
+  res.send('Succesfully updated your settings.');
 });
 
 module.exports = {
