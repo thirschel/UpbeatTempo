@@ -22,12 +22,13 @@
       </div>
 
       <section class="repositories" :class="{ loading: loading }">
-        <div class="repo" v-for="repo in filteredRepos">
-          <checkbox :checked="isChecked(repo)" @checkedChange="onCheckRepository(repo)"></checkbox>
+        <div class="repo" v-for="repo in filteredRepos" @click="onCheckRepository(repo)" :class="{'checked':isChecked(repo)}">
+          <div class="repo-wrapper">
           <img class="repo-avatar" :src="repo.links.avatar.href"/>
           <div class="repo-names">
             <h2 class="name">{{repo.name}}</h2>
             <p class="project-name">{{repo.project.name}}</p>
+          </div>
           </div>
         </div>
 
@@ -241,25 +242,43 @@
       transform: translate(-50%, -50%);
     }
     .repo {
-      display: flex;
+      width: calc(33% - 2em);
+      margin-right: 2em;
+      margin-bottom: 2em;
+      display: inline-block;
       align-items: center;
-      .checkbox {
-        margin-right: 1em;
+      border-radius: 4px;
+      border: 1px solid #e6e9eb;
+      cursor: pointer;
+      padding:15px 10px;
+      transition:.3s ease-in-out;
+      &.checked{
+        background: linear-gradient(45deg, #135FAC 1%, #1e88e5 64%, #40BAF5 97%);
+        border-width: 0px;
+        box-shadow: 0 5px 30px -5px rgba(37,45,51, .5);
+        color: #FFF ;
       }
-      .repo-avatar {
-        height: 40px;
-        width: 40px;
-        border-radius: 50%;
-        margin-right: 1em;
-      }
-      .repo-names {
-        text-align: left;
-        .name {
-          margin: 0;
-          color: $brand-accent;
+      .repo-wrapper {
+        display: flex;
+        align-items: center;
+        .checkbox {
+          margin-right: 1em;
         }
-        .project-name {
-          margin: 0;
+        .repo-avatar {
+          height: 40px;
+          width: 40px;
+          border-radius: 50%;
+          margin-right: 1em;
+        }
+        .repo-names {
+          text-align: left;
+          .name {
+            margin: 0;
+            color: $brand-accent;
+          }
+          .project-name {
+            margin: 0;
+          }
         }
       }
     }

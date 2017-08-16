@@ -100,6 +100,7 @@
               })
             }
           })
+          this.commits.sort((a,b)=>new Date(a.dateString) - new Date(b.dateString));
         }
         repos.forEach((repo,i)=>{
           repoCommits[repo.name] = [];

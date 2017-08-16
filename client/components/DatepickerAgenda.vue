@@ -195,10 +195,10 @@
         return this.startDate.format('YYYY');
       },
       startDateFormatted() {
-        return this.startDate.format('ddd') + ', ' + this.startDate.format('MMMM DD');
+        return this.startDate.format('ddd') + ', ' + this.startDate.format('MMM DD');
       },
       endDateFormatted() {
-        return this.endDate.format ? this.endDate.format('ddd') + ', ' + this.endDate.format('MMMM DD') : '';
+        return this.endDate.format ? this.endDate.format('ddd') + ', ' + this.endDate.format('MMM DD') : '';
       },
       classOrientation() {
         return this.orientation;
