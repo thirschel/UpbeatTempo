@@ -1,52 +1,55 @@
 <template>
-  <div class="page container">
-    <div v-if='authenticated'>
+  <div class="page">
+    <div class="container">
+      <div v-if='authenticated'>
 
-      <section class="repo-selection">
-        <div class="selection ub-btn" :class="{'ub-btn-primary':CONSTANTS.PERSONAL === selectedRepoType}"
-             @click="changeRepos(CONSTANTS.PERSONAL)">Personal Repositories
+        <section class="repo-selection">
+          <div class="selection ub-btn" :class="{'ub-btn-primary':CONSTANTS.PERSONAL === selectedRepoType}"
+               @click="changeRepos(CONSTANTS.PERSONAL)">Personal Repositories
 
-        </div>
-        <span class='selection ub-btn' :class="{'ub-btn-primary':CONSTANTS.TEAM === selectedRepoType}"
-              @click="changeRepos(CONSTANTS.TEAM)">Team Repositories</span>
-      </section>
-
-      <div class="repo-controls" v-if="filteredRepos.length">
-        <div class="search-repo-input">
-          <custom-input :value="searchRepoName" :label="CONSTANTS.SEARCH_REPO_LABEL"
-                        @valueChanged="searchTextChanged"></custom-input>
-        </div>
-        <div class="confirm-repos-wrapper">
-          <button class="ub-btn ub-btn-primary" :disabled="!checkedRepos.length" @click="confirmRepositories">Confirm Repositories</button>
-        </div>
-      </div>
-
-      <section class="repositories" :class="{ loading: loading }">
-        <div class="repo" v-for="repo in filteredRepos" @click="onCheckRepository(repo)" :class="{'checked':isChecked(repo)}">
-          <div class="repo-wrapper">
-          <img class="repo-avatar" :src="repo.links.avatar.href"/>
-          <div class="repo-names">
-            <h2 class="name">{{repo.name}}</h2>
-            <p class="project-name">{{repo.project.name}}</p>
           </div>
+          <span class='selection ub-btn' :class="{'ub-btn-primary':CONSTANTS.TEAM === selectedRepoType}"
+                @click="changeRepos(CONSTANTS.TEAM)">Team Repositories</span>
+        </section>
+
+        <div class="repo-controls" v-if="personalRepos.values.length || teamRepos.values.length">
+          <div class="search-repo-input">
+            <custom-input :value="searchRepoName" :label="CONSTANTS.SEARCH_REPO_LABEL"
+                          @valueChanged="searchTextChanged"></custom-input>
           </div>
         </div>
 
-        <pagination v-if="total > pageSize" :total="total" :page-size="pageSize" :callback="pageChanged"></pagination>
+        <section class="repositories" :class="{ loading: loading }">
+          <div class="repo" v-for="repo in filteredRepos" @click="onCheckRepository(repo)"
+               :class="{'checked':isChecked(repo)}">
+            <div class="repo-wrapper">
+              <img class="repo-avatar" :src="repo.links.avatar.href"/>
+              <div class="repo-names">
+                <h2 class="name">{{repo.name}}</h2>
+                <p class="project-name">{{repo.project.name}}</p>
+              </div>
+            </div>
+          </div>
 
-        <transition name="fade">
-          <div class="no-data" v-show="!displayRepos.length">
+          <!--<pagination v-if="total > pageSize" :total="total" :page-size="pageSize" :callback="pageChanged"></pagination>-->
+
+          <div class="no-data" v-show="!filteredRepos.length && !loading">
             <p>No repos found. </p>
             <img src="../assets/dead.png"/>
           </div>
-        </transition>
 
-        <transition name="fade">
-          <div class="loading-wrapper">
-            <loading v-show="loading"></loading>
-          </div>
-        </transition>
-      </section>
+          <transition name="fade">
+            <div class="loading-wrapper">
+              <loading v-show="loading"></loading>
+            </div>
+          </transition>
+        </section>
+      </div>
+    </div>
+    <div class="confirm-repos-wrapper" :class="{ active: checkedRepos.length }">
+      <button class="ub-btn ub-btn-primary confirm-repo-btn" :disabled="!checkedRepos.length" @click="confirmRepositories">
+        Confirm Repositories
+      </button>
     </div>
   </div>
 </template>
@@ -65,7 +68,7 @@
       Checkbox,
       CustomInput
     },
-    data(){
+    data() {
       const CONSTANTS = {
         PERSONAL: 'PERSONAL_REPOS',
         TEAM: 'TEAM_REPOS',
@@ -74,52 +77,49 @@
       return {
         personalRepos: {values: []},
         teamRepos: {values: []},
-        displayRepos: [],
         checkedRepos: [],
         CONSTANTS,
         selectedRepoType: CONSTANTS.TEAM,
         total: 0,
         page: 1,
-        pageSize: 10,
+        pageSize: 1000,
         loading: false,
         searchRepoName: '',
       }
     },
     computed: {
-      filteredRepos(){
+      filteredRepos() {
         if (this.selectedRepoType === this.CONSTANTS.TEAM) {
-          return this.searchRepoName === '' ?
+          let repos = this.searchRepoName === '' ?
             this.teamRepos.values.slice((this.page - 1) * this.pageSize, (this.page - 1) * this.pageSize + this.pageSize) :
             this.teamRepos.values.filter(tr => tr.name.toLowerCase().includes(this.searchRepoName.toLowerCase()));
+          //this.total = repos.length;
+          return repos;
         }
         else {
-          return this.searchRepoName === '' ?
+          let repos = this.searchRepoName === '' ?
             this.personalRepos.values.slice((this.page - 1) * this.pageSize, (this.page - 1) * this.pageSize + this.pageSize) :
             this.personalRepos.values.filter(tr => tr.name.toLowerCase().includes(this.searchRepoName.toLowerCase()));
-
+          //this.total = repos.length;
+          return repos;
         }
       }
     },
     methods: {
-      refreshToken(){
+      refreshToken() {
         this.$http.get(`/bitbucket/refresh?refresh_token=${localStorage.getItem('refresh_token')}`, {headers: {'Authorization': `Bearer ${access_token}`}}).then((access_token) => {
           localStorage.setItem('access_token', access_token.body.access_token)
         })
       },
-      changeRepos(repoType){
+      changeRepos(repoType) {
         this.searchRepoName = '';
         this.selectedRepoType = repoType;
         this.total = repoType === this.CONSTANTS.TEAM ? this.teamRepos.values.length : this.personalRepos.values.length;
-        this.displayRepos = repoType === this.CONSTANTS.TEAM ?
-          this.teamRepos.values.slice(0, this.pageSize) :
-          this.personalRepos.values.slice(0, this.pageSize);
-
       },
-      pageChanged(page){
+      pageChanged(page) {
         this.page = page;
         if (this.selectedRepoType === this.CONSTANTS.TEAM && this.teamRepos.values[((page - 1) * this.pageSize + this.pageSize) - 1] ||
           this.selectedRepoType === this.CONSTANTS.PERSONAL && this.personalRepos.values[((page - 1) * this.pageSize + this.pageSize) - 1]) {
-          this.changeDisplayRepos(page);
           return;
         }
         this.loading = true;
@@ -134,19 +134,13 @@
           else {
             this.personalRepos.values = this.personalRepos.values.concat(repos.body.values);
           }
-          this.changeDisplayRepos(page);
           this.loading = false;
         })
       },
-      changeDisplayRepos(page){
-        this.filteredRepos = this.selectedRepoType === this.CONSTANTS.TEAM ?
-          this.teamRepos.values.slice((page - 1) * this.pageSize, (page - 1) * this.pageSize + this.pageSize) :
-          this.personalRepos.values.slice((page - 1) * this.pageSize, (page - 1) * this.pageSize + this.pageSize);
-      },
-      isChecked(repo){
+      isChecked(repo) {
         return !!this.checkedRepos.find(cr => cr.uuid === repo.uuid);
       },
-      onCheckRepository(repo){
+      onCheckRepository(repo) {
         if (this.checkedRepos.find(cr => cr.uuid === repo.uuid)) {
           this.checkedRepos = this.checkedRepos.filter(cr => cr.uuid !== repo.uuid);
         }
@@ -154,25 +148,26 @@
           this.checkedRepos.push(repo);
         }
       },
-      searchTextChanged(value){
+      searchTextChanged(value) {
+        this.page = 1;
         this.searchRepoName = value;
       },
-      confirmRepositories(){
-          localStorage.setItem('repositories',JSON.stringify(this.checkedRepos));
-          router.replace('/ConfirmRepositories')
+      confirmRepositories() {
+        localStorage.setItem('repositories', JSON.stringify(this.checkedRepos));
+        router.replace('/ConfirmRepositories')
       }
     },
-    mounted(){
+    mounted() {
       const access_token = localStorage.getItem('access_token');
       const bitbucket_user_name = localStorage.getItem('bitbucket_user_name');
       this.loading = true;
       if (access_token && bitbucket_user_name) {
         this.$http.get(`https://api.bitbucket.org/2.0/repositories/${bitbucket_user_name}?pagelen=100`, {headers: {'Authorization': `Bearer ${access_token}`}}).then((repos) => {
           this.personalRepos = repos.body;
-        })
+        });
         this.$http.get('https://api.bitbucket.org/2.0/repositories/ArrowStream?pagelen=100', {headers: {'Authorization': `Bearer ${access_token}`}}).then((repos) => {
           this.teamRepos = repos.body;
-          this.changeDisplayRepos(1);
+          this.total = this.teamRepos.values.length;
           this.loading = false;
         }, () => {
         })
@@ -207,11 +202,21 @@
   .search-repo-input {
     .input {
       width: 100%;
+      max-width: 100%;
     }
   }
 
   .confirm-repos-wrapper {
-    text-align: right;
+    position: fixed;
+    bottom: -45px;
+    width: 100%;
+    transition: 0.25s ease-in-out;
+    &.active{
+     bottom:0;
+    }
+    .confirm-repo-btn{
+      width:100%;
+    }
   }
 
   .repositories {
@@ -235,7 +240,7 @@
       }
     }
     .loading-wrapper {
-      position: absolute;
+      position: fixed;
       top: 50%;
       left: 50%;
       z-index: 2;
@@ -250,13 +255,20 @@
       border-radius: 4px;
       border: 1px solid #e6e9eb;
       cursor: pointer;
-      padding:15px 10px;
-      transition:.3s ease-in-out;
-      &.checked{
+      padding: 15px 10px;
+      transition: .3s ease-in-out;
+      &.checked {
         background: linear-gradient(45deg, #135FAC 1%, #1e88e5 64%, #40BAF5 97%);
-        border-width: 0px;
-        box-shadow: 0 5px 30px -5px rgba(37,45,51, .5);
-        color: #FFF ;
+        border-color: rgba(255, 255, 255, 0.5);
+        box-shadow: 0 5px 30px -5px rgba(37, 45, 51, .5);
+        color: #FFF;
+        .repo-wrapper {
+          .repo-names {
+            .name {
+              color: #FFF;
+            }
+          }
+        }
       }
       .repo-wrapper {
         display: flex;
@@ -274,6 +286,9 @@
           text-align: left;
           .name {
             margin: 0;
+            transition: .3s ease-in-out;
+            font-size: 24px;
+            word-wrap: break-word;
             color: $brand-accent;
           }
           .project-name {

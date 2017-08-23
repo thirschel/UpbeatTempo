@@ -120,7 +120,7 @@ router.post('/updateSettings', function (req, res) {
         }, (error, committed) => {
         });
         res.status(200);
-        res.send('Succesfully updated your settings.');
+        res.send('Successfully updated your settings.');
       }
       else if (response.statusCode === 401) {
         res.status(401);
@@ -132,23 +132,25 @@ router.post('/updateSettings', function (req, res) {
       }
       else {
         res.status(500);
-        res.send('An error occured. Please try submitting your settings again');
+        res.send('An error occurred. Please try submitting your settings again');
       }
     })
   }
-  var bitbucketId = `bitbucket${req.body.bitbucketId}`;
-  var updatedUserData = {
-    BitbucketTeamName: req.body.teamName,
-    JiraAuth: '',
-    JiraInstanceName: req.body.jiraInstanceName,
-    LastUpdated: new Date()
-  };
-  firebase.database().ref('users/' + bitbucketId).transaction((currentData) => {
-    return Object.assign({}, currentData, updatedUserData);
-  }, (error, committed) => {
-  });
-  res.status(200);
-  res.send('Succesfully updated your settings.');
+  else {
+    var bitbucketId = `bitbucket${req.body.bitbucketId}`;
+    var updatedUserData = {
+      BitbucketTeamName: req.body.teamName,
+      JiraAuth: '',
+      JiraInstanceName: req.body.jiraInstanceName,
+      LastUpdated: new Date()
+    };
+    firebase.database().ref('users/' + bitbucketId).transaction((currentData) => {
+      return Object.assign({}, currentData, updatedUserData);
+    }, (error, committed) => {
+    });
+    res.status(200);
+    res.send('Succesfully updated your settings.');
+  }
 });
 
 module.exports = {

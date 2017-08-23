@@ -1,15 +1,21 @@
-<style lang="scss">
+<style lang="scss" scoped>
+  @import '../assets/variables.scss';
   .datepicker-container {
     position: relative;
+    .date-formatted{
+      color: $brand-accent;
+      cursor: pointer;
+    }
   }
 </style>
 
 <template>
   <div class="datepicker-container">
-    <input type="text"
-           :class="classDesign"
-           :value="date_formatted"
-           @click="showDatepicker">
+
+    <h2 class="date-formatted"
+        @click="showDatepicker">
+      {{date_formatted || 'Select Date'}}
+    </h2>
 
     <input type="hidden"
            :id="id"

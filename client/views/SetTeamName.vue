@@ -117,14 +117,11 @@
         this.$http.get(`/settings?bitbucketId=${bitbucket_user_name.replace(/{|}/g,'')}`,).then((res) => {
           var settings = res.body;
           if(settings){
-              var jiraAuth;
-              if(settings.JiraAuth){
-                jiraAuth = atob(settings.JiraAuth);
-              }
+              var jiraAuth = settings.JiraAuth ? atob(settings.JiraAuth) : '';
               this.teamName = settings.BitbucketTeamName;
               this.instanceName = settings.JiraInstanceName;
-              this.userName = jiraAuth.split(':')[0];
-              this.password = jiraAuth.split(':')[1];
+              this.userName = jiraAuth.split(':')[0] || '';
+              this.password = jiraAuth.split(':')[1] || '';
           }
         })
       }

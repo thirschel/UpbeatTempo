@@ -76,7 +76,7 @@
             <div class="datepicker-month-label"
                  v-for="month in [month]"
                  :class="classDirection"
-                 :key="month">
+                 :key="month.month">
               {{ month.getFormatted() }}
 
 
@@ -97,7 +97,7 @@
             <transition-group name="slidev">
               <div v-for="month in [month]"
                    :class="classDirection"
-                   :key="month">
+                   :key="month.month">
                 <div class="datepicker-day"
                      :style="{ width: (month.getWeekStart() * 41) + 'px' }">
                 </div>
@@ -162,7 +162,7 @@
       initialDate: {
         type: Object,
         default() {
-          return moment();
+          return moment(new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1));
         }
       },
       disablePassedDays: {type: Boolean, default: false},
@@ -234,6 +234,9 @@
       this.$nextTick(() => {
         this.setMonths();
         this.years = this.months[0].getYears();
+        this.startDate = moment(new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1));
+        this.endDate = moment(new Date(new Date().getFullYear(), new Date().getMonth(), 0));
+        this.submitDay();
       });
     },
     methods: {
@@ -425,6 +428,7 @@
     background-color: $primary-color;
     color: #ffffff;
     padding: 20px;
+    text-align:left;
 
     &.landscape {
       height: 373px;
